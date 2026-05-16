@@ -7,7 +7,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 function manualChunk(id) {
   if (!id.includes('node_modules')) return undefined
-  if (id.includes('element-ui')) return 'element-ui'
+  // element-ui 每个 lib/*.js 都是独立 webpack 打包体；强行合并到同一 chunk 会在生产包中产生
+  // TDZ 报错（如 Cannot access 'X' before initialization）。不指定 chunk，让其跟随入口同步打包。
+  if (id.includes('element-ui')) return undefined
   if (/node_modules[/\\]vue-router[/\\]/.test(id)) return 'vue-vendor'
   if (/node_modules[/\\]vuex[/\\]/.test(id)) return 'vue-vendor'
   if (/node_modules[/\\]vue[/\\]/.test(id)) return 'vue-vendor'
