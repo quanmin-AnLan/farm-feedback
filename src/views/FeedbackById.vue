@@ -17,16 +17,19 @@
     <FeedbackSurvey
       v-else
       :key="surveyKey"
+      :questionnaire-id="questionnaireId"
       :questions-override="questions"
       :page-title="pageTitle"
       :page-desc="pageDesc"
+      :success-text="successText"
+      :redirect-url="redirectUrl"
     />
   </div>
 </template>
 
 <script>
 import FeedbackSurvey from '@/views/FeedbackSurvey.vue'
-import { fetchSurveyConfigById } from '@/api/farm'
+import { fetchSurveyConfigById } from '@/api/questionnaire'
 
 export default {
   name: 'FeedbackById',
@@ -35,9 +38,12 @@ export default {
     return {
       loading: true,
       loadError: '',
+      questionnaireId: '',
       questions: [],
       pageTitle: '反馈',
       pageDesc: '',
+      successText: '',
+      redirectUrl: '',
     }
   },
   computed: {
@@ -68,10 +74,15 @@ export default {
       this.questions = []
 
       try {
-        const { title, desc, questions } = await fetchSurveyConfigById(id)
+        const detail = await fetchSurveyConfigById(id)
+        const { questionnaireId, title, description, questions, success } = detail
+        this.questionnaireId = questionnaireId || String(id)
         this.pageTitle = title || '反馈'
-        this.pageDesc = desc || ''
+        this.pageDesc = description || ''
         this.questions = Array.isArray(questions) ? questions : []
+        const sc = success || {}
+        this.successText = sc.textMode === 'custom' ? sc.customText || '' : ''
+        this.redirectUrl = sc.redirectUrl || ''
         if (this.questions.length === 0) {
           this.loadError = '未获取到题目配置，请检查接口返回'
         }

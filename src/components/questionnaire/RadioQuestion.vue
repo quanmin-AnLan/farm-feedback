@@ -41,7 +41,7 @@ function normalizeInbound(question, value) {
 }
 
 export default {
-  name: 'QuestionRadio',
+  name: 'RadioQuestion',
   props: {
     question: { type: Object, required: true },
     value: {

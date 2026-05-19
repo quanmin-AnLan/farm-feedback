@@ -1,7 +1,7 @@
 import http from './http'
 
-/** POST /farm/upload → http://api.anlan.xyz/farm/upload，仅 multipart 字段 file */
-export const FARM_UPLOAD_PATH = '/farm/upload'
+/** POST /questionnaire/upload，仅 multipart 字段 file */
+export const FARM_UPLOAD_PATH = '/questionnaire/upload'
 
 function pickRemoteUrl(payload) {
   if (payload == null) return ''

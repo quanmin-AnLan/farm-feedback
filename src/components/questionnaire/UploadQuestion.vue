@@ -22,7 +22,7 @@
 import { uploadFarmImage } from '@/api/upload'
 
 export default {
-  name: 'QuestionUpload',
+  name: 'UploadQuestion',
   props: {
     question: { type: Object, required: true },
     /** 每一项 { url: string, name?: string, uid?: string } */

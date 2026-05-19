@@ -1,15 +1,15 @@
-import QuestionInput from '@/components/question-meta/QuestionInput.vue'
-import QuestionTextarea from '@/components/question-meta/QuestionTextarea.vue'
-import QuestionRadio from '@/components/question-meta/QuestionRadio.vue'
-import QuestionCheckbox from '@/components/question-meta/QuestionCheckbox.vue'
-import QuestionUpload from '@/components/question-meta/QuestionUpload.vue'
+import InputQuestion from '@/components/questionnaire/InputQuestion.vue'
+import TextareaQuestion from '@/components/questionnaire/TextareaQuestion.vue'
+import RadioQuestion from '@/components/questionnaire/RadioQuestion.vue'
+import CheckboxQuestion from '@/components/questionnaire/CheckboxQuestion.vue'
+import UploadQuestion from '@/components/questionnaire/UploadQuestion.vue'
 
 export const QUESTION_TYPE_MAP = {
-  input: QuestionInput,
-  textarea: QuestionTextarea,
-  radio: QuestionRadio,
-  checkbox: QuestionCheckbox,
-  upload: QuestionUpload,
+  input: InputQuestion,
+  textarea: TextareaQuestion,
+  radio: RadioQuestion,
+  checkbox: CheckboxQuestion,
+  upload: UploadQuestion,
 }
 
 export function resolveQuestionComponent(type) {

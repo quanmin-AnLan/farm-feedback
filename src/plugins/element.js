@@ -12,6 +12,7 @@ import Radio from 'element-ui/lib/radio'
 import RadioGroup from 'element-ui/lib/radio-group'
 import Select from 'element-ui/lib/select'
 import Upload from 'element-ui/lib/upload'
+import Message from 'element-ui/lib/message'
 
 import 'element-ui/lib/theme-chalk/base.css'
 import 'element-ui/lib/theme-chalk/alert.css'
@@ -30,6 +31,7 @@ import 'element-ui/lib/theme-chalk/scrollbar.css'
 import 'element-ui/lib/theme-chalk/select.css'
 import 'element-ui/lib/theme-chalk/select-dropdown.css'
 import 'element-ui/lib/theme-chalk/upload.css'
+import 'element-ui/lib/theme-chalk/message.css'
 
 ;[
   Alert,
@@ -46,3 +48,5 @@ import 'element-ui/lib/theme-chalk/upload.css'
   Select,
   Upload,
 ].forEach((c) => Vue.use(c))
+
+Vue.prototype.$message = Message

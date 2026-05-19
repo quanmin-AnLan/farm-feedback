@@ -37,10 +37,17 @@
       </div>
 
       <div class="actions">
-        <el-button type="primary" size="medium" @click="submitSurvey">
+        <el-button
+          type="primary"
+          size="medium"
+          :loading="submitting"
+          @click="submitSurvey"
+        >
           提交
         </el-button>
-        <el-button size="medium" @click="reset">重置</el-button>
+        <el-button size="medium" :disabled="submitting" @click="reset">
+          重置
+        </el-button>
       </div>
     </el-form>
 
@@ -57,6 +64,7 @@
 import { resolveQuestionComponent } from '@/constants/questionComponents'
 import { shouldShowQuestion } from '@/utils/questionRelation'
 import { createQuestionValidator } from '@/utils/validateQuestionAnswer'
+import { submitAnswer } from '@/api/questionnaire'
 
 const DEMO_QUESTIONS = [
   {
@@ -166,6 +174,11 @@ export default {
       validator: (v) => v === undefined || Array.isArray(v),
       default: undefined,
     },
+    /** 真实问卷 id；传入则点击提交时调用 /questionnaire/:id/answer；不传则走本地预览 */
+    questionnaireId: {
+      type: String,
+      default: '',
+    },
     pageTitle: {
       type: String,
       default: '问卷调查 / 反馈',
@@ -175,10 +188,21 @@ export default {
       default:
         '各题型为元组件拼装；支持输入、多行、单选（含开放项）、多选（含开放项）、图片上传（本地预览）；支持关联条件展示。',
     },
+    /** 自定义提交成功文案 */
+    successText: {
+      type: String,
+      default: '',
+    },
+    /** 提交成功后跳转地址 */
+    redirectUrl: {
+      type: String,
+      default: '',
+    },
   },
   data() {
     return {
       answers: {},
+      submitting: false,
       previewVisible: false,
       formattedPayload: '',
     }
@@ -260,9 +284,34 @@ export default {
         return
       }
       const payload = this.buildSubmitPayload()
-      this.formattedPayload = JSON.stringify(payload, null, 2)
-      this.previewVisible = true
-      this.$message.success('校验通过')
+      // 未指定 questionnaireId：保持原 demo 行为，弹预览
+      if (!this.questionnaireId) {
+        this.formattedPayload = JSON.stringify(payload, null, 2)
+        this.previewVisible = true
+        this.$message.success('校验通过')
+        return
+      }
+      // 真实问卷：调用服务端接口
+      this.submitting = true
+      try {
+        await submitAnswer(this.questionnaireId, payload)
+        this.$message.success(this.successText || '提交成功，感谢您的参与')
+        this.answers = {}
+        this.$nextTick(() => {
+          const ref = this.$refs.surveyForm
+          if (ref) ref.clearValidate()
+        })
+        if (this.redirectUrl) {
+          // 给 Message 留出可见时间再跳转
+          setTimeout(() => {
+            window.location.href = this.redirectUrl
+          }, 800)
+        }
+      } catch {
+        // 错误已在 axios 拦截器统一提示
+      } finally {
+        this.submitting = false
+      }
     },
     validateFormAsync() {
       const ref = this.$refs.surveyForm

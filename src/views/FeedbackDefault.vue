@@ -49,9 +49,12 @@
       <FeedbackSurvey
         v-else-if="questions.length > 0"
         :key="surveyKey"
+        :questionnaire-id="questionnaireId"
         :questions-override="questions"
         :page-title="pageTitle"
         :page-desc="pageDesc"
+        :success-text="successText"
+        :redirect-url="redirectUrl"
       />
     </template>
   </div>
@@ -59,7 +62,7 @@
 
 <script>
 import FeedbackSurvey from '@/views/FeedbackSurvey.vue'
-import { fetchDefaultConfig, fetchSurveyConfigById } from '@/api/farm'
+import { fetchDefaultConfig, fetchSurveyConfigById } from '@/api/questionnaire'
 
 export default {
   name: 'FeedbackDefault',
@@ -72,9 +75,12 @@ export default {
       selectedValue: '',
       loadingSurvey: false,
       surveyError: '',
+      questionnaireId: '',
       questions: [],
       pageTitle: '反馈',
       pageDesc: '',
+      successText: '',
+      redirectUrl: '',
       loadSurveySeq: 0,
     }
   },
@@ -130,11 +136,16 @@ export default {
       this.questions = []
 
       try {
-        const { title, desc, questions } = await fetchSurveyConfigById(id)
+        const detail = await fetchSurveyConfigById(id)
         if (seq !== this.loadSurveySeq) return
+        const { questionnaireId, title, description, questions, success } = detail
+        this.questionnaireId = questionnaireId || String(id)
         this.pageTitle = title || '反馈'
-        this.pageDesc = desc || ''
+        this.pageDesc = description || ''
         this.questions = Array.isArray(questions) ? questions : []
+        const sc = success || {}
+        this.successText = sc.textMode === 'custom' ? sc.customText || '' : ''
+        this.redirectUrl = sc.redirectUrl || ''
         if (this.questions.length === 0) {
           this.surveyError = '未获取到题目配置，请检查接口返回'
         }

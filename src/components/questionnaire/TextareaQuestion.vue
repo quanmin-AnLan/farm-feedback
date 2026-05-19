@@ -1,21 +1,22 @@
 <template>
   <el-input
     :value="inner"
+    type="textarea"
+    :rows="4"
+    resize="vertical"
     :show-word-limit="hasLimit"
     :maxlength="maxLen"
-    type="text"
     :placeholder="placeholder"
-    clearable
-    @input="onInput"
+    @input="emitInput"
   />
 </template>
 
 <script>
 export default {
-  name: 'QuestionInput',
+  name: 'TextareaQuestion',
   props: {
     question: { type: Object, required: true },
-    value: { type: [String, Number], default: '' },
+    value: { type: String, default: '' },
   },
   computed: {
     placeholder() {
@@ -28,24 +29,14 @@ export default {
     hasLimit() {
       return this.maxLen !== undefined
     },
-    inner: {
-      get() {
-        return this.value === undefined || this.value === null
-          ? ''
-          : String(this.value)
-      },
-      set(v) {
-        this.$emit('input', v)
-      },
+    inner() {
+      return this.value === undefined || this.value === null
+        ? ''
+        : String(this.value)
     },
   },
   methods: {
-    onInput(v) {
-      if (this.question.isNum) {
-        const s = String(v == null ? '' : v).replace(/\D/g, '')
-        this.$emit('input', s)
-        return
-      }
+    emitInput(v) {
       if (typeof this.maxLen === 'number' && typeof v === 'string') {
         this.$emit('input', v.slice(0, this.maxLen))
         return

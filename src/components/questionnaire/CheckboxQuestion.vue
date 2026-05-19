@@ -32,7 +32,7 @@ function normalizeInbound(value) {
 }
 
 export default {
-  name: 'QuestionCheckbox',
+  name: 'CheckboxQuestion',
   props: {
     question: { type: Object, required: true },
     value: {
