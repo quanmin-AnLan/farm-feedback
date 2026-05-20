@@ -7,8 +7,9 @@
       :file-list="fileList"
       :auto-upload="true"
       :http-request="onRequest"
+      :before-upload="beforeUpload"
       :on-remove="onRemove"
-      accept="image/*"
+      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
       multiple
       :limit="limit"
       :on-exceed="onExceed"
@@ -20,6 +21,17 @@
 
 <script>
 import { uploadFarmImage } from '@/api/upload'
+
+const UPLOAD_MAX_BYTES = 10 * 1024 * 1024
+const UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png']
+const UPLOAD_EXTENSIONS = ['.jpg', '.jpeg', '.png']
+
+function isAllowedUploadFile(file) {
+  const mime = (file.type || '').toLowerCase()
+  if (UPLOAD_MIME_TYPES.includes(mime)) return true
+  const name = (file.name || '').toLowerCase()
+  return UPLOAD_EXTENSIONS.some((ext) => name.endsWith(ext))
+}
 
 export default {
   name: 'UploadQuestion',
@@ -54,6 +66,17 @@ export default {
     },
   },
   methods: {
+    beforeUpload(file) {
+      if (!isAllowedUploadFile(file)) {
+        this.$message.error('仅支持 JPG、JPEG、PNG 格式')
+        return false
+      }
+      if (file.size > UPLOAD_MAX_BYTES) {
+        this.$message.error('单张图片不能超过 10MB')
+        return false
+      }
+      return true
+    },
     emitNext(list) {
       this.$emit('input', list)
       this.$emit('change', list)

@@ -141,8 +141,7 @@ const DEMO_QUESTIONS = [
     id: 6,
     title: '上传图片 demo',
     type: 'upload',
-    placeholder:
-      '请上传 JPG/PNG（接口 http://api.anlan.xyz/farm/upload）',
+    placeholder: '请上传 JPG/JPEG/PNG，单张不超过 10MB',
     require: false,
     uploadLimit: 9,
   },
