@@ -46,4 +46,8 @@ export default {
   width: 100%;
   max-width: 360px;
 }
+
+.date-question ::v-deep .el-input__inner {
+  font-size: 16px;
+}
 </style>

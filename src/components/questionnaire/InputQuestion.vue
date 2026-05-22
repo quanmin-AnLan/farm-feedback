@@ -1,5 +1,6 @@
 <template>
   <el-input
+    class="q-field-input"
     :value="inner"
     :show-word-limit="hasLimit"
     :maxlength="maxLen"
@@ -55,3 +56,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+::v-deep .q-field-input .el-input__inner {
+  font-size: 16px;
+}
+</style>

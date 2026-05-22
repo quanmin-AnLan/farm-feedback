@@ -1,23 +1,76 @@
 /**
- * 移动端表单体验修复
- * 1. iOS Safari：input/select 字号 < 16px 会在聚焦时自动放大页面
- * 2. touch-action: manipulation 减少多余触摸延迟
+ * 移动端 / iOS 表单体验
+ * - iOS Safari：可聚焦控件字号 < 16px 时会自动放大页面
+ * - 勿仅依赖 (pointer: coarse)，iPad / 部分 iOS 不匹配
  */
-@media (hover: none) and (pointer: coarse) {
+
+html.farm-mobile,
+html.farm-ios {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.farm-mobile input,
+html.farm-mobile select,
+html.farm-mobile textarea,
+html.farm-ios input,
+html.farm-ios select,
+html.farm-ios textarea,
+html.farm-mobile .el-input__inner,
+html.farm-mobile .el-textarea__inner,
+html.farm-mobile .el-select .el-input__inner,
+html.farm-mobile .el-date-editor .el-input__inner,
+html.farm-ios .el-input__inner,
+html.farm-ios .el-textarea__inner,
+html.farm-ios .el-select .el-input__inner,
+html.farm-ios .el-date-editor .el-input__inner {
+  font-size: 16px !important;
+  line-height: 1.5;
+}
+
+html.farm-mobile button,
+html.farm-mobile input,
+html.farm-mobile select,
+html.farm-mobile textarea,
+html.farm-mobile .el-input__inner,
+html.farm-mobile .el-radio,
+html.farm-mobile .el-checkbox {
+  touch-action: manipulation;
+}
+
+/* 窄屏兜底（html 类未打上时仍生效） */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea,
   .el-input__inner,
   .el-textarea__inner,
   .el-select .el-input__inner,
   .el-date-editor .el-input__inner {
     font-size: 16px !important;
+    line-height: 1.5;
   }
 
   button,
-  select,
   input,
+  select,
   textarea,
   .el-input__inner,
   .el-radio,
   .el-checkbox {
     touch-action: manipulation;
+  }
+}
+
+/* iOS WebKit 兜底 */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea,
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select .el-input__inner,
+  .el-date-editor .el-input__inner {
+    font-size: 16px !important;
   }
 }

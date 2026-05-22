@@ -10,8 +10,22 @@
 </template>
 
 <script>
+import { syncMobileRootClass } from '@/utils/mobileClient'
+
 export default {
   name: 'App',
+  mounted() {
+    syncMobileRootClass()
+    this._onResize = () => syncMobileRootClass()
+    window.addEventListener('resize', this._onResize)
+    window.addEventListener('orientationchange', this._onResize)
+  },
+  beforeDestroy() {
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize)
+      window.removeEventListener('orientationchange', this._onResize)
+    }
+  },
 }
 </script>
 

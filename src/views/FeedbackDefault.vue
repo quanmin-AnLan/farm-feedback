@@ -16,8 +16,8 @@
 
     <template v-else>
       <div class="type-toolbar">
-        <!-- 触摸端使用原生 select：一次点击即可选，且避免 el-select 双次点击问题 -->
         <select
+          v-if="useNativeSelect"
           v-model="selectedValue"
           class="type-select type-select--native"
           @change="onTypeChange(selectedValue)"
@@ -31,8 +31,9 @@
           </option>
         </select>
         <el-select
+          v-else
           v-model="selectedValue"
-          class="type-select type-select--desktop"
+          class="type-select"
           filterable
           placeholder="请选择反馈类型"
           @change="onTypeChange"
@@ -78,6 +79,7 @@
 <script>
 import FeedbackSurvey from '@/views/FeedbackSurvey.vue'
 import { fetchDefaultConfig, fetchSurveyConfigById } from '@/api/questionnaire'
+import { preferNativeFormControls } from '@/utils/mobileClient'
 
 export default {
   name: 'FeedbackDefault',
@@ -98,6 +100,20 @@ export default {
       successText: '',
       redirectUrl: '',
       loadSurveySeq: 0,
+      useNativeSelect: preferNativeFormControls(),
+    }
+  },
+  mounted() {
+    this._onResize = () => {
+      this.useNativeSelect = preferNativeFormControls()
+    }
+    window.addEventListener('resize', this._onResize)
+    window.addEventListener('orientationchange', this._onResize)
+  },
+  beforeDestroy() {
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize)
+      window.removeEventListener('orientationchange', this._onResize)
     }
   },
   computed: {
@@ -217,10 +233,9 @@ export default {
 }
 
 .type-select--native {
-  display: none;
   padding: 10px 36px 10px 12px;
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.5;
   color: #606266;
   background-color: #fff;
   border: 1px solid #dcdfe6;
@@ -231,20 +246,6 @@ export default {
   &:focus {
     border-color: #409eff;
     outline: none;
-  }
-}
-
-.type-select--desktop {
-  display: block;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .type-select--native {
-    display: block;
-  }
-
-  .type-select--desktop {
-    display: none;
   }
 }
 </style>

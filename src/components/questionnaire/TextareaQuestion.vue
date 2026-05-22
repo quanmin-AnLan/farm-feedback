@@ -1,5 +1,6 @@
 <template>
   <el-input
+    class="q-field-textarea"
     :value="inner"
     type="textarea"
     :rows="4"
@@ -46,3 +47,9 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+::v-deep .q-field-textarea .el-textarea__inner {
+  font-size: 16px;
+}
+</style>
