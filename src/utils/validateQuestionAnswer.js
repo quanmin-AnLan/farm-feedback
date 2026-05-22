@@ -1,3 +1,5 @@
+import { isInputNumeric, normalizeDigitsOnly } from '@/utils/inputNumeric'
+
 /**
  * Element UI validator：根据题目配置校验答案
  * @param {object} question
@@ -26,8 +28,12 @@ export function createQuestionValidator(question, options = {}) {
           if (String(value).length > q.maxLength)
             return callback(new Error(`最多 ${q.maxLength} 个字`))
         }
-        if (q.isNum && !/^\d+$/.test(String(value)))
-          return callback(new Error('仅允许填写数字'))
+        if (isInputNumeric(q)) {
+          const s = String(value).trim()
+          if (s && !/^\d+$/.test(normalizeDigitsOnly(s))) {
+            return callback(new Error('仅允许填写数字'))
+          }
+        }
         break
       case 'textarea':
         empty = value == null || String(value).trim() === ''

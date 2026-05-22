@@ -6,7 +6,8 @@
     :value="inner"
     :placeholder="placeholder"
     :maxlength="maxLen"
-    :inputmode="question.isNum ? 'numeric' : 'text'"
+    :inputmode="numericOnly ? 'numeric' : 'text'"
+    :pattern="numericOnly ? '[0-9]*' : undefined"
     @input="onNativeInput"
   />
   <el-input
@@ -23,6 +24,11 @@
 </template>
 
 <script>
+import {
+  isInputNumeric,
+  normalizeInputValue,
+} from '@/utils/inputNumeric'
+
 export default {
   name: 'InputQuestion',
   props: {
@@ -31,6 +37,9 @@ export default {
     native: { type: Boolean, default: false },
   },
   computed: {
+    numericOnly() {
+      return isInputNumeric(this.question)
+    },
     placeholder() {
       return this.question.placeholder || '请输入'
     },
@@ -49,19 +58,16 @@ export default {
   },
   methods: {
     onNativeInput(e) {
-      this.onInput(e.target.value)
+      const el = e.target
+      const next = normalizeInputValue(this.question, el.value)
+      // iOS 原生 input：仅 emit 而 DOM 不刷新时，会出现仍可输入非数字的假象
+      if (el.value !== next) {
+        el.value = next
+      }
+      this.$emit('input', next)
     },
     onInput(v) {
-      if (this.question.isNum) {
-        const s = String(v == null ? '' : v).replace(/\D/g, '')
-        this.$emit('input', s)
-        return
-      }
-      if (typeof this.maxLen === 'number' && typeof v === 'string') {
-        this.$emit('input', v.slice(0, this.maxLen))
-        return
-      }
-      this.$emit('input', v)
+      this.$emit('input', normalizeInputValue(this.question, v))
     },
   },
 }
