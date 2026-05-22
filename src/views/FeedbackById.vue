@@ -19,6 +19,7 @@
       :key="surveyKey"
       :questionnaire-id="questionnaireId"
       :questions-override="questions"
+      :group-requires-override="groupRequires"
       :page-title="pageTitle"
       :page-desc="pageDesc"
       :success-text="successText"
@@ -40,6 +41,7 @@ export default {
       loadError: '',
       questionnaireId: '',
       questions: [],
+      groupRequires: [],
       pageTitle: '反馈',
       pageDesc: '',
       successText: '',
@@ -75,11 +77,13 @@ export default {
 
       try {
         const detail = await fetchSurveyConfigById(id)
-        const { questionnaireId, title, description, questions, success } = detail
+        const { questionnaireId, title, description, questions, groupRequires, success } =
+          detail
         this.questionnaireId = questionnaireId || String(id)
         this.pageTitle = title || '反馈'
         this.pageDesc = description || ''
         this.questions = Array.isArray(questions) ? questions : []
+        this.groupRequires = Array.isArray(groupRequires) ? groupRequires : []
         const sc = success || {}
         this.successText = sc.textMode === 'custom' ? sc.customText || '' : ''
         this.redirectUrl = sc.redirectUrl || ''

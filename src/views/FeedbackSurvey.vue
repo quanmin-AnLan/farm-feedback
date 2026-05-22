@@ -11,10 +11,17 @@
       :model="answers"
       label-position="top"
       :rules="formRules"
+      :validate-on-rule-change="false"
     >
-      <div v-for="q in visibleQuestions" :key="String(q.id)" class="q-block">
+      <div
+        v-for="q in visibleQuestions"
+        :key="String(q.id)"
+        class="q-block"
+        :class="{ 'q-block--group-error': !!groupErrorForQuestion(q) }"
+      >
         <div class="q-title-line">
           <span v-if="q.require" class="req">*</span>
+          <span v-else-if="isInGroupRequire(q)" class="req-group" title="组合必填">~</span>
           <span class="q-title-text">{{ q.title }}</span>
         </div>
 
@@ -25,6 +32,7 @@
             :question="q"
             :value="answers[String(q.id)]"
             @input="(val) => onFieldInput(q, val)"
+            @blur.native="() => onFieldBlur(q)"
           />
           <el-alert
             v-else
@@ -34,6 +42,9 @@
             show-icon
           />
         </el-form-item>
+        <p v-if="groupErrorForQuestion(q)" class="q-group-error">
+          {{ groupErrorForQuestion(q) }}
+        </p>
       </div>
 
       <div class="actions">
@@ -64,6 +75,11 @@
 import { resolveQuestionComponent } from '@/constants/questionComponents'
 import { shouldShowQuestion } from '@/utils/questionRelation'
 import { createQuestionValidator } from '@/utils/validateQuestionAnswer'
+import {
+  validateAllGroupRequires,
+  getGroupsForQuestion,
+  getActiveGroupMembers,
+} from '@/utils/groupRequire'
 import { submitAnswer } from '@/api/questionnaire'
 
 const DEMO_QUESTIONS = [
@@ -145,6 +161,13 @@ const DEMO_QUESTIONS = [
     require: false,
     uploadLimit: 9,
   },
+  {
+    id: 7,
+    title: '期望处理时间（日期 demo）',
+    type: 'date',
+    placeholder: '请选择日期时间',
+    require: false,
+  },
 ]
 
 function deepCloneQuestions(list) {
@@ -173,6 +196,10 @@ export default {
       validator: (v) => v === undefined || Array.isArray(v),
       default: undefined,
     },
+    groupRequiresOverride: {
+      validator: (v) => v === undefined || Array.isArray(v),
+      default: undefined,
+    },
     /** 真实问卷 id；传入则点击提交时调用 /questionnaire/:id/answer；不传则走本地预览 */
     questionnaireId: {
       type: String,
@@ -185,7 +212,7 @@ export default {
     pageDesc: {
       type: String,
       default:
-        '各题型为元组件拼装；支持输入、多行、单选（含开放项）、多选（含开放项）、图片上传（本地预览）；支持关联条件展示。',
+        '各题型为元组件拼装；支持输入、多行、单选（含开放项）、多选（含开放项）、日期时间、图片上传（本地预览）；支持关联条件展示。',
     },
     /** 自定义提交成功文案 */
     successText: {
@@ -204,6 +231,12 @@ export default {
       submitting: false,
       previewVisible: false,
       formattedPayload: '',
+      /** 是否已点击过提交（此后才展示未填必填项错误） */
+      submitAttempted: false,
+      /** 用户已交互过的题目 id */
+      touched: {},
+      /** 组合必填错误 { [groupId]: message } */
+      groupErrors: {},
     }
   },
   computed: {
@@ -212,6 +245,10 @@ export default {
         return deepCloneQuestions(DEMO_QUESTIONS)
       }
       return deepCloneQuestions(this.questionsOverride)
+    },
+    groupRequires() {
+      if (!Array.isArray(this.groupRequiresOverride)) return []
+      return JSON.parse(JSON.stringify(this.groupRequiresOverride))
     },
     visibleQuestions() {
       return this.questions.filter((q) =>
@@ -230,8 +267,11 @@ export default {
         const id = String(q.id)
         ruleMap[id] = [
           {
-            validator: createQuestionValidator(q),
-            trigger: ['change', 'blur'],
+            validator: createQuestionValidator(q, {
+              shouldShowError: () =>
+                this.submitAttempted || !!this.touched[id],
+            }),
+            trigger: [],
           },
         ]
       })
@@ -249,16 +289,44 @@ export default {
     fieldComponent(type) {
       return resolveQuestionComponent(type)
     },
+    markTouched(id) {
+      if (!this.touched[id]) {
+        this.$set(this.touched, id, true)
+      }
+    },
     onFieldInput(q, val) {
       const key = String(q.id)
       this.$set(this.answers, key, val)
+      this.markTouched(key)
+      if (this.submitAttempted) {
+        this.$nextTick(() => {
+          this.validateField(key)
+          this.revalidateGroupsForQuestion(key)
+        })
+      }
+    },
+    onFieldBlur(q) {
+      this.markTouched(String(q.id))
     },
     onVisibleIdsChange() {
       this.enforceVisibilityAnswers()
+      this.pruneTouched()
+      this.syncGroupErrors()
       this.$nextTick(() => {
         const ref = this.$refs.surveyForm
         if (ref) ref.clearValidate()
       })
+    },
+    pruneTouched() {
+      const keep = new Set(this.visibleQuestions.map((q) => String(q.id)))
+      Object.keys(this.touched).forEach((id) => {
+        if (!keep.has(id)) this.$delete(this.touched, id)
+      })
+    },
+    validateField(prop) {
+      const ref = this.$refs.surveyForm
+      if (!ref) return
+      ref.validateField(prop, () => {})
     },
     enforceVisibilityAnswers() {
       const keep = new Set(this.visibleQuestions.map((q) => String(q.id)))
@@ -266,8 +334,70 @@ export default {
         if (!keep.has(k)) this.$delete(this.answers, k)
       })
     },
+    isInGroupRequire(q) {
+      return getGroupsForQuestion(this.groupRequires, q.id).length > 0
+    },
+    groupErrorForQuestion(q) {
+      const qid = String(q.id)
+      for (let i = 0; i < this.groupRequires.length; i += 1) {
+        const g = this.groupRequires[i]
+        const msg = this.groupErrors[String(g.id)]
+        if (!msg) continue
+        const members = getActiveGroupMembers(g, this.questions, this.answers)
+        if (members.length && String(members[0].id) === qid) return msg
+      }
+      return ''
+    },
+    syncGroupErrors() {
+      if (!this.submitAttempted) {
+        this.groupErrors = {}
+        return
+      }
+      const errs = validateAllGroupRequires(
+        this.groupRequires,
+        this.questions,
+        this.answers,
+      )
+      const next = {}
+      errs.forEach((e) => {
+        next[e.groupId] = e.message
+      })
+      this.groupErrors = next
+    },
+    revalidateGroupsForQuestion(questionId) {
+      getGroupsForQuestion(this.groupRequires, questionId).forEach((g) => {
+        const errs = validateAllGroupRequires(
+          [g],
+          this.questions,
+          this.answers,
+        )
+        const gid = String(g.id)
+        if (errs.length) {
+          this.$set(this.groupErrors, gid, errs[0].message)
+        } else {
+          this.$delete(this.groupErrors, gid)
+        }
+      })
+    },
+    validateGroupRequiresAsync() {
+      const errs = validateAllGroupRequires(
+        this.groupRequires,
+        this.questions,
+        this.answers,
+      )
+      const next = {}
+      errs.forEach((e) => {
+        next[e.groupId] = e.message
+        ;(e.questionIds || []).forEach((id) => this.markTouched(String(id)))
+      })
+      this.groupErrors = next
+      return errs.length ? Promise.reject(new Error('group invalid')) : Promise.resolve()
+    },
     reset() {
       this.answers = {}
+      this.submitAttempted = false
+      this.touched = {}
+      this.groupErrors = {}
       this.$nextTick(() => {
         const ref = this.$refs.surveyForm
         if (ref) ref.clearValidate()
@@ -277,9 +407,13 @@ export default {
       return stripUploadMeta(JSON.parse(JSON.stringify(this.answers)))
     },
     async submitSurvey() {
+      this.submitAttempted = true
       try {
         await this.validateFormAsync()
+        await this.validateGroupRequiresAsync()
       } catch {
+        this.$message.warning('请完善必填项后再提交')
+        this.scrollToFirstError()
         return
       }
       const payload = this.buildSubmitPayload()
@@ -296,6 +430,9 @@ export default {
         await submitAnswer(this.questionnaireId, payload)
         this.$message.success(this.successText || '提交成功，感谢您的参与')
         this.answers = {}
+        this.submitAttempted = false
+        this.touched = {}
+        this.groupErrors = {}
         this.$nextTick(() => {
           const ref = this.$refs.surveyForm
           if (ref) ref.clearValidate()
@@ -320,6 +457,16 @@ export default {
           if (valid) resolve()
           else reject(new Error('invalid'))
         })
+      })
+    },
+    scrollToFirstError() {
+      this.$nextTick(() => {
+        const node =
+          this.$el.querySelector('.q-block--group-error') ||
+          this.$el.querySelector('.el-form-item.is-error')
+        if (node && typeof node.scrollIntoView === 'function') {
+          node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
       })
     },
   },
@@ -353,6 +500,21 @@ export default {
   margin-bottom: 24px;
 }
 
+.q-block--group-error {
+  padding: 8px 10px;
+  margin-left: -10px;
+  margin-right: -10px;
+  border-radius: 4px;
+  background: #fef0f0;
+}
+
+.q-group-error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #f56c6c;
+  line-height: 1.5;
+}
+
 .q-title-line {
   display: flex;
   align-items: flex-start;
@@ -363,6 +525,15 @@ export default {
     margin-right: 6px;
     line-height: 1.7;
     font-size: 16px;
+  }
+
+  .req-group {
+    flex-shrink: 0;
+    margin-right: 6px;
+    font-size: 16px;
+    line-height: 1.7;
+    font-weight: 600;
+    color: #e6a23c;
   }
 
   .q-title-text {

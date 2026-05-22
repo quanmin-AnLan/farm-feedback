@@ -1,9 +1,19 @@
 /**
  * Element UI validator：根据题目配置校验答案
+ * @param {object} question
+ * @param {{ shouldShowError?: () => boolean }} [options]
+ *   shouldShowError 为 false 时不展示错误（用于未触碰且未提交时的必填项）
  */
-export function createQuestionValidator(question) {
+export function createQuestionValidator(question, options = {}) {
   const q = question
+  const shouldShowError =
+    typeof options.shouldShowError === 'function'
+      ? options.shouldShowError
+      : () => true
+
   return (_, value, callback) => {
+    if (!shouldShowError()) return callback()
+
     const require = !!q.require
     let empty = false
 
@@ -81,6 +91,11 @@ export function createQuestionValidator(question) {
         if (empty) return callback(new Error('请上传至少一张图片'))
         break
       }
+      case 'date':
+        empty = value == null || String(value).trim() === ''
+        if (empty && !require) return callback()
+        if (empty) return callback(new Error('请选择日期时间'))
+        break
       default:
         break
     }

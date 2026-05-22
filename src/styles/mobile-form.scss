@@ -1,0 +1,23 @@
+/**
+ * 移动端表单体验修复
+ * 1. iOS Safari：input/select 字号 < 16px 会在聚焦时自动放大页面
+ * 2. touch-action: manipulation 减少多余触摸延迟
+ */
+@media (hover: none) and (pointer: coarse) {
+  .el-input__inner,
+  .el-textarea__inner,
+  .el-select .el-input__inner,
+  .el-date-editor .el-input__inner {
+    font-size: 16px !important;
+  }
+
+  button,
+  select,
+  input,
+  textarea,
+  .el-input__inner,
+  .el-radio,
+  .el-checkbox {
+    touch-action: manipulation;
+  }
+}

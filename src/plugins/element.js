@@ -12,6 +12,7 @@ import Radio from 'element-ui/lib/radio'
 import RadioGroup from 'element-ui/lib/radio-group'
 import Select from 'element-ui/lib/select'
 import Upload from 'element-ui/lib/upload'
+import DatePicker from 'element-ui/lib/date-picker'
 import Message from 'element-ui/lib/message'
 
 import 'element-ui/lib/theme-chalk/base.css'
@@ -31,6 +32,9 @@ import 'element-ui/lib/theme-chalk/scrollbar.css'
 import 'element-ui/lib/theme-chalk/select.css'
 import 'element-ui/lib/theme-chalk/select-dropdown.css'
 import 'element-ui/lib/theme-chalk/upload.css'
+import 'element-ui/lib/theme-chalk/date-picker.css'
+import 'element-ui/lib/theme-chalk/time-picker.css'
+import 'element-ui/lib/theme-chalk/time-select.css'
 import 'element-ui/lib/theme-chalk/message.css'
 
 ;[
@@ -47,6 +51,7 @@ import 'element-ui/lib/theme-chalk/message.css'
   RadioGroup,
   Select,
   Upload,
+  DatePicker,
 ].forEach((c) => Vue.use(c))
 
 Vue.prototype.$message = Message

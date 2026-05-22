@@ -37,6 +37,7 @@ export function parseSurveyConfig(detail) {
       description: '',
       anonymous: false,
       questions: [],
+      groupRequires: [],
       success: { textMode: 'default', customText: '', redirectUrl: '' },
     }
   }
@@ -46,6 +47,7 @@ export function parseSurveyConfig(detail) {
     description: detail.description || detail.desc || '',
     anonymous: !!detail.anonymous,
     questions: Array.isArray(detail.questions) ? detail.questions : [],
+    groupRequires: Array.isArray(detail.groupRequires) ? detail.groupRequires : [],
     success: detail.success || {
       textMode: 'default',
       customText: '',

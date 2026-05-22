@@ -16,9 +16,23 @@
 
     <template v-else>
       <div class="type-toolbar">
+        <!-- 触摸端使用原生 select：一次点击即可选，且避免 el-select 双次点击问题 -->
+        <select
+          v-model="selectedValue"
+          class="type-select type-select--native"
+          @change="onTypeChange(selectedValue)"
+        >
+          <option
+            v-for="opt in typeOptions"
+            :key="String(opt.value)"
+            :value="opt.value"
+          >
+            {{ opt.label }}
+          </option>
+        </select>
         <el-select
           v-model="selectedValue"
-          class="type-select"
+          class="type-select type-select--desktop"
           filterable
           placeholder="请选择反馈类型"
           @change="onTypeChange"
@@ -51,6 +65,7 @@
         :key="surveyKey"
         :questionnaire-id="questionnaireId"
         :questions-override="questions"
+        :group-requires-override="groupRequires"
         :page-title="pageTitle"
         :page-desc="pageDesc"
         :success-text="successText"
@@ -77,6 +92,7 @@ export default {
       surveyError: '',
       questionnaireId: '',
       questions: [],
+      groupRequires: [],
       pageTitle: '反馈',
       pageDesc: '',
       successText: '',
@@ -138,11 +154,13 @@ export default {
       try {
         const detail = await fetchSurveyConfigById(id)
         if (seq !== this.loadSurveySeq) return
-        const { questionnaireId, title, description, questions, success } = detail
+        const { questionnaireId, title, description, questions, groupRequires, success } =
+          detail
         this.questionnaireId = questionnaireId || String(id)
         this.pageTitle = title || '反馈'
         this.pageDesc = description || ''
         this.questions = Array.isArray(questions) ? questions : []
+        this.groupRequires = Array.isArray(groupRequires) ? groupRequires : []
         const sc = success || {}
         this.successText = sc.textMode === 'custom' ? sc.customText || '' : ''
         this.redirectUrl = sc.redirectUrl || ''
@@ -196,5 +214,37 @@ export default {
 .type-select {
   width: 100%;
   max-width: 420px;
+}
+
+.type-select--native {
+  display: none;
+  padding: 10px 36px 10px 12px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #606266;
+  background-color: #fff;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  appearance: auto;
+  -webkit-appearance: menulist;
+
+  &:focus {
+    border-color: #409eff;
+    outline: none;
+  }
+}
+
+.type-select--desktop {
+  display: block;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .type-select--native {
+    display: block;
+  }
+
+  .type-select--desktop {
+    display: none;
+  }
 }
 </style>
