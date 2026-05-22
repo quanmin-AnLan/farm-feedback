@@ -8,7 +8,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "clean": "rm -rf dist node_modules/.vite",
+    "build": "npm run clean && vite build --force",
+    "build:stamp": "BUILD_ID=$(date +%s) npm run build",
     "preview": "vite preview",
     "lint": "eslint --ext .js,.vue src"
   },

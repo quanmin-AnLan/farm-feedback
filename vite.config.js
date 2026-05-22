@@ -1,9 +1,13 @@
+import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import { createVuePlugin } from 'vite-plugin-vue2'
+import { resolveBuildId } from './scripts/resolve-build-id.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const buildId = resolveBuildId()
+const builtAt = new Date().toISOString()
 
 function manualChunk(id) {
   if (!id.includes('node_modules')) return undefined
@@ -17,8 +21,39 @@ function manualChunk(id) {
   return 'vendor'
 }
 
+/** 写入 dist/build-meta.json，便于部署后核对是否为新包 */
+function farmBuildMetaPlugin() {
+  return {
+    name: 'farm-feedback-build-meta',
+    transformIndexHtml(html) {
+      return html.replace(
+        /<!--\s*farm-build-id:[^>]*-->/,
+        `<!-- farm-build-id: ${buildId} builtAt=${builtAt} -->`,
+      )
+    },
+    closeBundle() {
+      const outDir = path.resolve(__dirname, 'dist')
+      const meta = {
+        name: 'farm-feedback',
+        buildId,
+        builtAt,
+      }
+      fs.mkdirSync(outDir, { recursive: true })
+      fs.writeFileSync(
+        path.join(outDir, 'build-meta.json'),
+        `${JSON.stringify(meta, null, 2)}\n`,
+        'utf8',
+      )
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [createVuePlugin()],
+  plugins: [createVuePlugin(), farmBuildMetaPlugin()],
+  define: {
+    __FARM_BUILD_ID__: JSON.stringify(buildId),
+    __FARM_BUILT_AT__: JSON.stringify(builtAt),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -28,15 +63,17 @@ export default defineConfig({
     port: 5173,
   },
   build: {
-    // 目标适度提高可减少转译体积（按需调整）
     target: 'es2019',
+    emptyOutDir: true,
     cssCodeSplit: true,
+    // 避免沿用上次构建缓存导致产物 hash 与内容不一致
     rollupOptions: {
       output: {
         manualChunks: manualChunk,
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        // 使用较长 hash，降低碰撞；内容或 buildId 变化时文件名会变
+        chunkFileNames: 'assets/js/[name]-[hash:12].js',
+        entryFileNames: 'assets/js/[name]-[hash:12].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash:12].[ext]',
       },
     },
     chunkSizeWarningLimit: 900,
