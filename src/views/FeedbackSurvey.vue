@@ -1,7 +1,7 @@
 <template>
   <div class="feedback-survey">
     <header class="page-head">
-      <h2>{{ pageTitle }}</h2>
+      <h2>当前反馈类型：{{ pageTitle }}</h2>
       <p v-if="pageDesc" class="page-desc">{{ pageDesc }}</p>
     </header>
 

@@ -16,6 +16,7 @@
 
     <template v-else>
       <div class="type-toolbar">
+        <p class="type-toolbar__label">请选择反馈类型</p>
         <select
           v-if="useNativeSelect"
           v-model="selectedValue"
@@ -232,6 +233,14 @@ export default {
 
 .type-toolbar {
   margin-bottom: 8px;
+}
+
+.type-toolbar__label {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.5;
 }
 
 .type-select {
