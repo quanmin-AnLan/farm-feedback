@@ -1,7 +1,9 @@
 <template>
   <div id="app" class="app-root">
+    <disclaimer-dialog :visible.sync="disclaimerVisible" />
+
     <header class="app-header">
-      <h1 class="title">farm-feedback</h1>
+      <h1 class="title">安澜的农场反馈</h1>
     </header>
     <main class="app-main">
       <router-view />
@@ -10,10 +12,21 @@
 </template>
 
 <script>
+import DisclaimerDialog from '@/components/DisclaimerDialog.vue'
+import { hasAcceptedDisclaimer } from '@/constants/disclaimer'
 import { syncMobileRootClass } from '@/utils/mobileClient'
 
 export default {
   name: 'App',
+  components: { DisclaimerDialog },
+  data() {
+    return {
+      disclaimerVisible: false,
+    }
+  },
+  created() {
+    this.disclaimerVisible = !hasAcceptedDisclaimer()
+  },
   mounted() {
     syncMobileRootClass()
     this._onResize = () => syncMobileRootClass()
@@ -64,7 +77,7 @@ body {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: #8f0bbb;
 }
 
 .app-main {
