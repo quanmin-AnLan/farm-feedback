@@ -44,6 +44,7 @@ export default {
   name: 'RadioQuestion',
   props: {
     question: { type: Object, required: true },
+    native: { type: Boolean, default: false },
     value: {
       type: [String, Object],
       default: () => ({

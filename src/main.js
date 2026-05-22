@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import '@/plugins/element'
 import '@/styles/mobile-form.scss'
+import '@/styles/native-field.scss'
 import { syncMobileRootClass } from '@/utils/mobileClient'
 import App from './App.vue'
 import router from './router'

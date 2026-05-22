@@ -37,6 +37,7 @@ export default {
   name: 'UploadQuestion',
   props: {
     question: { type: Object, required: true },
+    native: { type: Boolean, default: false },
     /** 每一项 { url: string, name?: string, uid?: string } */
     value: { type: Array, default: () => [] },
   },

@@ -1,5 +1,15 @@
 <template>
+  <textarea
+    v-if="native"
+    class="native-field native-field--textarea"
+    :value="inner"
+    :placeholder="placeholder"
+    :maxlength="maxLen"
+    rows="4"
+    @input="onNativeInput"
+  />
   <el-input
+    v-else
     class="q-field-textarea"
     :value="inner"
     type="textarea"
@@ -18,6 +28,7 @@ export default {
   props: {
     question: { type: Object, required: true },
     value: { type: String, default: '' },
+    native: { type: Boolean, default: false },
   },
   computed: {
     placeholder() {
@@ -37,6 +48,9 @@ export default {
     },
   },
   methods: {
+    onNativeInput(e) {
+      this.emitInput(e.target.value)
+    },
     emitInput(v) {
       if (typeof this.maxLen === 'number' && typeof v === 'string') {
         this.$emit('input', v.slice(0, this.maxLen))

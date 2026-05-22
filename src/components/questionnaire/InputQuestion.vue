@@ -1,5 +1,16 @@
 <template>
+  <input
+    v-if="native"
+    class="native-field"
+    type="text"
+    :value="inner"
+    :placeholder="placeholder"
+    :maxlength="maxLen"
+    :inputmode="question.isNum ? 'numeric' : 'text'"
+    @input="onNativeInput"
+  />
   <el-input
+    v-else
     class="q-field-input"
     :value="inner"
     :show-word-limit="hasLimit"
@@ -17,6 +28,7 @@ export default {
   props: {
     question: { type: Object, required: true },
     value: { type: [String, Number], default: '' },
+    native: { type: Boolean, default: false },
   },
   computed: {
     placeholder() {
@@ -29,18 +41,16 @@ export default {
     hasLimit() {
       return this.maxLen !== undefined
     },
-    inner: {
-      get() {
-        return this.value === undefined || this.value === null
-          ? ''
-          : String(this.value)
-      },
-      set(v) {
-        this.$emit('input', v)
-      },
+    inner() {
+      return this.value === undefined || this.value === null
+        ? ''
+        : String(this.value)
     },
   },
   methods: {
+    onNativeInput(e) {
+      this.onInput(e.target.value)
+    },
     onInput(v) {
       if (this.question.isNum) {
         const s = String(v == null ? '' : v).replace(/\D/g, '')

@@ -35,6 +35,7 @@ export default {
   name: 'CheckboxQuestion',
   props: {
     question: { type: Object, required: true },
+    native: { type: Boolean, default: false },
     value: {
       type: [Array, Object],
       default: () => ({

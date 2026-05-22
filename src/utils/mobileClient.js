@@ -15,9 +15,10 @@ export function isNarrowViewport() {
   return window.matchMedia('(max-width: 768px)').matches
 }
 
-/** 是否优先使用原生 select 等控件（避免 el-select 双击、聚焦放大） */
+/** 是否优先使用原生表单控件（避免 el-select 双击、iOS 输入框放大） */
 export function preferNativeFormControls() {
-  return isNarrowViewport() || isIos()
+  if (isIos()) return true
+  return isNarrowViewport()
 }
 
 export function syncMobileRootClass() {

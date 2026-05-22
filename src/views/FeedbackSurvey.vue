@@ -29,6 +29,7 @@
           <component
             :is="fieldComponent(q.type)"
             v-if="fieldComponent(q.type)"
+            :native="useNativeControls"
             :question="q"
             :value="answers[String(q.id)]"
             @input="(val) => onFieldInput(q, val)"
@@ -72,7 +73,13 @@
 </template>
 
 <script>
-import { resolveQuestionComponent } from '@/constants/questionComponents'
+import InputQuestion from '@/components/questionnaire/InputQuestion.vue'
+import TextareaQuestion from '@/components/questionnaire/TextareaQuestion.vue'
+import RadioQuestion from '@/components/questionnaire/RadioQuestion.vue'
+import CheckboxQuestion from '@/components/questionnaire/CheckboxQuestion.vue'
+import UploadQuestion from '@/components/questionnaire/UploadQuestion.vue'
+import DateQuestion from '@/components/questionnaire/DateQuestion.vue'
+import { resolveQuestionComponentName } from '@/constants/questionComponents'
 import { shouldShowQuestion } from '@/utils/questionRelation'
 import { createQuestionValidator } from '@/utils/validateQuestionAnswer'
 import {
@@ -80,6 +87,7 @@ import {
   getGroupsForQuestion,
   getActiveGroupMembers,
 } from '@/utils/groupRequire'
+import { preferNativeFormControls, syncMobileRootClass } from '@/utils/mobileClient'
 import { submitAnswer } from '@/api/questionnaire'
 
 const DEMO_QUESTIONS = [
@@ -190,6 +198,14 @@ function stripUploadMeta(payload) {
 
 export default {
   name: 'FeedbackSurvey',
+  components: {
+    InputQuestion,
+    TextareaQuestion,
+    RadioQuestion,
+    CheckboxQuestion,
+    UploadQuestion,
+    DateQuestion,
+  },
   props: {
     /** 传入题目数组则按配置渲染；不传则使用内置 DEMO_QUESTIONS */
     questionsOverride: {
@@ -237,9 +253,31 @@ export default {
       touched: {},
       /** 组合必填错误 { [groupId]: message } */
       groupErrors: {},
+      /** 触发窄屏 / 旋转时重新计算是否使用原生控件 */
+      viewportKey: 0,
+    }
+  },
+  mounted() {
+    const onViewportChange = () => {
+      this.viewportKey += 1
+      syncMobileRootClass()
+    }
+    this._onViewportChange = onViewportChange
+    window.addEventListener('resize', onViewportChange)
+    window.addEventListener('orientationchange', onViewportChange)
+    syncMobileRootClass()
+  },
+  beforeDestroy() {
+    if (this._onViewportChange) {
+      window.removeEventListener('resize', this._onViewportChange)
+      window.removeEventListener('orientationchange', this._onViewportChange)
     }
   },
   computed: {
+    useNativeControls() {
+      void this.viewportKey
+      return preferNativeFormControls()
+    },
     questions() {
       if (!Array.isArray(this.questionsOverride)) {
         return deepCloneQuestions(DEMO_QUESTIONS)
@@ -287,7 +325,7 @@ export default {
   },
   methods: {
     fieldComponent(type) {
-      return resolveQuestionComponent(type)
+      return resolveQuestionComponentName(type)
     },
     markTouched(id) {
       if (!this.touched[id]) {

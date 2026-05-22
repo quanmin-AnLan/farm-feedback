@@ -79,7 +79,7 @@
 <script>
 import FeedbackSurvey from '@/views/FeedbackSurvey.vue'
 import { fetchDefaultConfig, fetchSurveyConfigById } from '@/api/questionnaire'
-import { preferNativeFormControls } from '@/utils/mobileClient'
+import { preferNativeFormControls, syncMobileRootClass } from '@/utils/mobileClient'
 
 export default {
   name: 'FeedbackDefault',
@@ -100,23 +100,30 @@ export default {
       successText: '',
       redirectUrl: '',
       loadSurveySeq: 0,
-      useNativeSelect: preferNativeFormControls(),
+      viewportKey: 0,
     }
   },
   mounted() {
-    this._onResize = () => {
-      this.useNativeSelect = preferNativeFormControls()
+    const onViewportChange = () => {
+      this.viewportKey += 1
+      syncMobileRootClass()
     }
-    window.addEventListener('resize', this._onResize)
-    window.addEventListener('orientationchange', this._onResize)
+    this._onViewportChange = onViewportChange
+    window.addEventListener('resize', onViewportChange)
+    window.addEventListener('orientationchange', onViewportChange)
+    syncMobileRootClass()
   },
   beforeDestroy() {
-    if (this._onResize) {
-      window.removeEventListener('resize', this._onResize)
-      window.removeEventListener('orientationchange', this._onResize)
+    if (this._onViewportChange) {
+      window.removeEventListener('resize', this._onViewportChange)
+      window.removeEventListener('orientationchange', this._onViewportChange)
     }
   },
   computed: {
+    useNativeSelect() {
+      void this.viewportKey
+      return preferNativeFormControls()
+    },
     surveyKey() {
       return String(this.selectedValue)
     },
