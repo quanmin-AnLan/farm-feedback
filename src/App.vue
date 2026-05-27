@@ -83,7 +83,7 @@ body {
 .app-main {
   flex: 1;
   padding: 24px;
-  max-width: 960px;
+  max-width: 1240px;
   width: 100%;
   margin: 0 auto;
 }
