@@ -5,10 +5,11 @@
     width="92%"
     top="8vh"
     custom-class="disclaimer-dialog"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
-    :show-close="false"
+    :close-on-click-modal="dismissible"
+    :close-on-press-escape="dismissible"
+    :show-close="dismissible"
     append-to-body
+    @closed="onClosed"
   >
     <div class="disclaimer-dialog__scroll">
       <p class="disclaimer-dialog__intro">{{ intro }}</p>
@@ -29,7 +30,20 @@
       </p>
     </div>
     <span slot="footer" class="disclaimer-dialog__footer">
-      <el-button type="primary" class="disclaimer-dialog__btn" @click="onAccept">
+      <el-button
+        v-if="dismissible"
+        type="primary"
+        class="disclaimer-dialog__btn"
+        @click="onClose"
+      >
+        关闭
+      </el-button>
+      <el-button
+        v-else
+        type="primary"
+        class="disclaimer-dialog__btn"
+        @click="onAccept"
+      >
         我已阅读并同意
       </el-button>
     </span>
@@ -49,6 +63,8 @@ export default {
   name: 'DisclaimerDialog',
   props: {
     visible: { type: Boolean, default: false },
+    /** 已同意后的再次查看：可关闭，无需重复确认 */
+    dismissible: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -73,6 +89,12 @@ export default {
       saveDisclaimerAccepted()
       this.innerVisible = false
       this.$emit('accepted')
+    },
+    onClose() {
+      this.innerVisible = false
+    },
+    onClosed() {
+      this.$emit('closed')
     },
   },
 }

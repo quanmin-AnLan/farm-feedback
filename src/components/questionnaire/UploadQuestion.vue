@@ -4,6 +4,7 @@
     <el-upload
       class="pic-uploader"
       list-type="picture-card"
+      :action="uploadAction"
       :file-list="fileList"
       :auto-upload="true"
       :http-request="onRequest"
@@ -20,7 +21,7 @@
 </template>
 
 <script>
-import { uploadFarmImage } from '@/api/upload'
+import { getFarmUploadAction, uploadFarmImage } from '@/api/upload'
 
 const UPLOAD_MAX_BYTES = 10 * 1024 * 1024
 const UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png']
@@ -48,6 +49,9 @@ export default {
     }
   },
   computed: {
+    uploadAction() {
+      return getFarmUploadAction()
+    },
     hint() {
       return this.question.placeholder || ''
     },

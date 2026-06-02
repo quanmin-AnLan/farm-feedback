@@ -1,7 +1,14 @@
 import http from './http'
+import { API_BASE_URL } from './interceptors'
 
 /** POST /questionnaire/upload，仅 multipart 字段 file */
 export const FARM_UPLOAD_PATH = '/questionnaire/upload'
+
+/** el-upload 必填 action；实际上传走 http-request */
+export function getFarmUploadAction() {
+  const base = String(API_BASE_URL || '').replace(/\/$/, '')
+  return `${base}${FARM_UPLOAD_PATH}`
+}
 
 function pickRemoteUrl(payload) {
   if (payload == null) return ''
